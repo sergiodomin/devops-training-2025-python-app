@@ -10,7 +10,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/sergiodomin/devops-training-2025-python-app.git'
+                checkout([$class: 'GitSCM', branches: [[name: 'refs/heads/feat/base']], 
+                    userRemoteConfigs: [[url: 'https://github.com/sergiodomin/devops-training-2025-python-app.git']]])
             }
         }
 
