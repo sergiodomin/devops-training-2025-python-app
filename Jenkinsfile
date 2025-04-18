@@ -1,50 +1,53 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.10'
-            args '-u root:root'  // Esto da permisos si se requiere instalar algo
-        }
-    }
+    agent none
+
     stages {
         stage('Checkout') {
+            agent { label 'docker' }
             steps {
-                // Descargar el código del repositorio
                 git branch: 'feat/base', url: 'https://github.com/sergiodomin/devops-training-2025-python-app.git'
             }
         }
 
         stage('Install Dependencies') {
-            steps {
-                // Instalar las dependencias necesarias
-                script {
-                    sh 'pip install -r requirements.txt'
+            agent {
+                docker {
+                    image 'python:3.10'
+                    args '-u root:root'
                 }
+            }
+            steps {
+                sh 'pip install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
-            steps {
-                // Ejecutar las pruebas
-                script {
-                    sh 'pytest'
+            agent {
+                docker {
+                    image 'python:3.10'
+                    args '-u root:root'
                 }
+            }
+            steps {
+                sh 'pytest'
             }
         }
 
         stage('Build Docker Image') {
+            agent any // Usa el host de Jenkins
             steps {
-                // Construir la imagen Docker
-                script {
-                    sh 'docker build -t my-python-app .'
-                }
+                sh 'docker build -t my-python-app .'
             }
         }
 
         stage('Push to DockerHub') {
+            agent any
             steps {
-                // Subir la imagen Docker a DockerHub
-                script {
-                    sh 'docker push my-python-app'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push my-python-app
+                    '''
                 }
             }
         }
