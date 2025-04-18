@@ -27,6 +27,14 @@ pipeline {
                 }
             }
         }
+        stage('Check Docker Version') {
+            steps {
+                script {
+                    sh 'docker --version' // Esto debería mostrar la versión de Docker
+                }
+            }
+        }
+
 
         stage('Build Docker Image') {
             steps {
