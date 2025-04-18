@@ -55,14 +55,6 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                script {
-                    // Aquí puedes agregar el paso para el despliegue, por ejemplo:
-                    // sh './deploy.sh'
-                }
-            }
-        }
     }
     
     post {
