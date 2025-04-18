@@ -2,26 +2,25 @@ version: "3.7"
 
 services:
   app:
-    image: contrerasadr/devops-training-2025-python-app:0.0.1
-    # build: 
-    #   context: .
-    #   dockerfile: devops/Dockerfile
+    build:
+      context: .
+      dockerfile: devops/Dockerfile
     container_name: my-flask-app-dc
     restart: unless-stopped
     networks:
       - scalian_training
     environment:
-      DB_USER: root
-      DB_PWD: rootpwd
+      DB_USER: ${DB_USER}
+      DB_PWD: ${DB_PWD}
       DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: knights
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
     depends_on:
       - db
     ports:
       - "5001:5000"
+    command: ["./wait-for-it.sh", "db:5432", "--", "python", "app.py"]
 
-  
   db:
     image: postgres:16-alpine
     container_name: my-flask-app-db
@@ -29,18 +28,38 @@ services:
     ports:
       - "32000:5432"
     environment:
-      POSTGRES_PASSWORD: rootpwd
-      POSTGRES_USER: root
-      POSTGRES_DB: knights
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./db:/docker-entrypoint-initdb.d
       - dbdata:/var/lib/postgresql/data
     networks:
       scalian_training:
 
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    networks:
+      - scalian_training
+
+  github-runner:
+    image: myoung34/github-runner:latest
+    container_name: github-runner
+    environment:
+      - RUNNER_NAME=local-runner
+      - RUNNER_WORKDIR=/tmp/github-runner
+      - RUNNER_GROUP=Default
+    volumes:
+      - ./github-runner:/tmp/github-runner
+    networks:
+      - scalian_training
+
 networks:
   scalian_training:
     driver: bridge
-  
+
 volumes:
   dbdata:
